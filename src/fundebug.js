@@ -564,7 +564,7 @@ var _0x4d12 = function(m, _succeeded) {
               falseySection = results && results[1] || "[anonymous]";
               responseGroup.push(falseySection);
               /** @type {(!Function|null)} */
-              curr = curr.caller;
+              curr = curr.caller  ;
             }
             return "generated-stack:\n" + responseGroup.join("\n");
           }(),
