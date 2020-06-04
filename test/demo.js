@@ -23,3 +23,10 @@
  // 跨域脚本捕获
  // 允许跨域且 crossorigin = anonymous
  
+
+ // promise错误
+//  var p = new Promise((resolve, reject) => {
+//    setTimeout(() => {
+//     reject('errror')
+//    }, 1000)
+//  })

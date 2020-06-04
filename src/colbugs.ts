@@ -7,8 +7,10 @@ interface IinitOptions {
     apiKey?: string
     colDev?: boolean;
     colSource?: boolean;
-    isPerformance?: boolean;
-    isBehavior?: boolean;
+    colPerformance?: boolean;
+    colBehavior?: boolean;
+    colIframe?: boolean;
+    consoleLevel?: string;
 }
 
 class Colbugs {
@@ -22,14 +24,18 @@ class Colbugs {
     colDev: boolean;
     // colSource: 是否监控静态资源加载错误
     colSource: boolean;
-    // isPerformance: 报错时是否上传页面性能指标
-    isPerformance: boolean;
-    // isBehavior: 报错时是否上传用户行为
-    isBehavior: boolean;
+    // colPerformance: 报错时是否上传页面性能指标
+    colPerformance: boolean;
+    // colBehavior: 报错时是否上传用户行为
+    colBehavior: boolean;
+    // colIframe: 是否监控iframe加载错误
+    colIframe: boolean;
     // 网站标题
     title: string;
     // 网站url
     url: string;
+    // console日志级别
+    consoleLevel: string
 
     constructor() {
         this.init({})
@@ -40,15 +46,17 @@ class Colbugs {
      * @param param0 
      */
     init(options: IinitOptions) {
-        const { callback = null, apiKey = "wyp", colDev = false, colSource = true, isPerformance = true, isBehavior = true } = options
+        const { callback = null, apiKey = "wyp", colDev = false, colSource = true, colPerformance = true, colBehavior = true, colIframe = true, consoleLevel = "log" } = options
         this.callback = !callback ? (data) => { console.log(data) } : callback;
         this.apiKey = apiKey;
         this.colDev = colDev;
         this.colSource = colSource;
-        this.isPerformance = isPerformance;
-        this.isBehavior = isBehavior;
+        this.colPerformance = colPerformance;
+        this.colBehavior = colBehavior;
+        this.colIframe = colIframe
+        this.consoleLevel = consoleLevel;
         // 初始化错误监控
-        const errorCaught = new ErrorCaught({ colSource });
+        const errorCaught = new ErrorCaught({ colSource, colIframe, consoleLevel });
         
     }
     /**
@@ -65,7 +73,7 @@ class Colbugs {
         if(message) {
             this.sendMsg.message = message;
         }
-        if (this.isPerformance) {
+        if (this.colPerformance) {
             const p = new Performance()
             this.sendMsg.per = p.performances;
             console.log(this.sendMsg)
@@ -76,6 +84,7 @@ class Colbugs {
     }
     /**
      * 获取网站基本信息，用户设备等
+     * @memberof Colbugs
      */
     getUserMsg(): void{
         if("navigator" in window) {
@@ -91,6 +100,7 @@ class Colbugs {
     }
     /**
      * 监控domready事件
+     * @memberof domReady
      */
     private domReady():void {
         if(document.addEventListener) {

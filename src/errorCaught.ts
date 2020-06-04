@@ -1,47 +1,55 @@
+import Utils from './utils'
+enum consoleLever {
+    debug,
+    log,
+    info,
+    warn, 
+    error
+}
+
 /**
- * 错误处理类 ErrorCaught
- * 处理资源请求错误 resourceErrorCatch
- * 
+ * @class ErrorCaught
+ * @extends {Utils}
  */
-interface ICaughtmsg {
+class ErrorCaught extends Utils {
     colSource: boolean;
-}
-
-interface IUncaughtMsg {
-    message: string;
-    row: number;
-    col: number;
-    name: string;
-    stacktrace: string;
-    type: string;
-}
-
-interface IPromiseErrorMsg {
-    type: string;
-    message: string;
-    name: string;
-    stacktrace: string
-}
-
-class ErrorCaught {
-    colSource: boolean;
+    colIframe: boolean;
+    consoleLevel: string;
+    /**
+     * 创建实例
+     * @param {ICaughtmsg} options
+     * @memberof ErrorCaught
+     */
     constructor(options: ICaughtmsg) {
-        const { colSource } = options;
+        super()
+        const { colSource, colIframe, consoleLevel } = options;
         this.colSource = colSource;
+        this.colIframe = colIframe;
+        this.consoleLevel = consoleLevel;
         this._init()
     }
+    /**
+     * 初始化
+     * @private
+     * @memberof ErrorCaught
+     */
     private _init(): void {
         if (this.colSource) {
             this.resourceErrorCaught()
         }
+        if (this.colIframe) {
+            this.iframeErrorCaught()
+        }
         this.syncErrorCaught()
         this.promiseErrorCaught()
+        this.consoleWatch()
     }
     /**
      * 资源请求出错，400，500类型错误
      * 图片资源，js脚本，css资源
      * colSource选项决定是否捕获
      * 同步error也可以捕获，但是放在window.onerror统一处理
+     * @memberof ErrorCaught
      */
     resourceErrorCaught(): void {
         if (window.addEventListener) {
@@ -87,10 +95,12 @@ class ErrorCaught {
      *   3.5. SyntaxError: 语法错误。例子：var a = ;
      *   3.6. TypeError: 变量或参数不属于有效范围。例子：[1,2].split('.')
      *   3.7. URIError: 给 encodeURI或 decodeURl()传递的参数无效。例子：decodeURI('%2')
+     * @memberof ErrorCaught
      */
     syncErrorCaught(): void {
         window.onerror = function (msg: string | Event, url: string, row: number, col: number, error: Error) {
             // 跨域脚本，且后台没有设置跨域，将异常往上抛出，交给其他输出处理
+            console.log(msg, error)
             if (msg === "Script error.") return false
             var result: IUncaughtMsg = {
                 message: error && error.message,
@@ -107,49 +117,69 @@ class ErrorCaught {
     }
     /**
      * promise 错误捕获
+     * @memberof promiseErrorCaught
      */
-    promiseErrorCaught() {
-        window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-            const reason = event.reason || {}
-            var result: IPromiseErrorMsg = {
-                type: event.type || "unhandledrejection",
-                name: event.type || "unhandledrejection",
-                message: reason.message,
-                stacktrace: reason.stack
-            }
-            console.log(result)
-            let value = this.tryGet(event, 'reason')
-            if (!this.isError(value)) {
-                try {
-                    //   throw Error(e.serialize(value));
-                } catch (sequence_values) {
-                    value = sequence_values;
+    promiseErrorCaught(): void {
+        if (window.addEventListener) {
+            window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+                const reason = this.tryGet(event, 'reason') || {}
+                var result: IPromiseErrorMsg = {
+                    type: event.type || "unhandledrejection",
+                    name: event.type || "unhandledrejection",
+                    message: reason.message,
+                    stacktrace: reason.stack
                 }
+                console.log("promiseError======", result)
                 event.preventDefault() // 阻止冒泡放在末尾，否则无法拿到堆栈信息
+            }, true)
+        }
+    }
+    /**
+     * iframe错误捕获 - 跨域无法获取错误
+     * @memberof ErrorCaught
+     */
+    iframeErrorCaught(): void {
+    }
+    /**
+     * 重写浏览器console
+     *
+     * @memberof ErrorCaught
+     */
+    consoleWatch() {
+        if(window.console) {
+            const consoleProto = window.console;
+            let setlevel:string | number;
+            let level:number;
+            let settingLevel: Array<string|number> = []
+            if (setlevel = this.tryGet(consoleLever, this.consoleLevel)) {
+                level = this.isNumber(setlevel) ? <number>setlevel : Infinity;
+                this.foreach(consoleLever, (val, key) => {
+                    if(this.isNumber(val) && val >= level) {
+                        settingLevel.push(key)
+                    }
+                })
+                if(this.getLength(settingLevel)) {
+                    console.log(settingLevel)
+                    this.foreach(settingLevel, (type, i) => {
+                        const originMethods = console[type]
+                        console[type] = function() {
+                            console.debug(arguments)
+                            try {
+                                var params = {
+                                    type: "console",
+
+                                }
+                            }catch{}
+                            originMethods.apply(console, arguments)
+                        }
+                    })
+                }
             }
-        }, true)
-    }
-    tryGet(it, key): any {
-        try {
-            return it[key];
-        } catch (c) {
+            const consoleMethods = Object.create(consoleProto)
+            const watchMethods = ["log", "debug", "info", "warn", "error"];
+            
+
         }
-    }
-    isObject(o): boolean {
-        return Object.prototype.toString.call(o) === 'object'
-    }
-    isString(o): boolean {
-        return "string" === typeof o
-    }
-    toString(func) {
-        return Object.prototype.toString.call(func);
-    }
-    isError(obj) {
-        if (!this.isObject(obj)) {
-            return false;
-        }
-        var value = this.toString(obj);
-        return "[object Error]" === value || "[object DOMException]" === value || this.isString(obj.name) && this.isString(obj.message);
     }
 }
 
