@@ -3,7 +3,7 @@ enum consoleLever {
     debug,
     log,
     info,
-    warn, 
+    warn,
     error
 }
 
@@ -141,46 +141,50 @@ class ErrorCaught extends Utils {
     iframeErrorCaught(): void {
     }
     /**
-     * 重写浏览器console
-     *
+     * @description 重写浏览器console
      * @memberof ErrorCaught
      */
     consoleWatch() {
-        if(window.console) {
-            const consoleProto = window.console;
-            let setlevel:string | number;
-            let level:number;
-            let settingLevel: Array<string|number> = []
+        const result = []
+        if (window.console) {
+            let setlevel: string | number;
+            let level: number;
+            let settingLevel: Array<string | number> = []
             if (setlevel = this.tryGet(consoleLever, this.consoleLevel)) {
                 level = this.isNumber(setlevel) ? <number>setlevel : Infinity;
                 this.foreach(consoleLever, (val, key) => {
-                    if(this.isNumber(val) && val >= level) {
+                    if (this.isNumber(val) && val >= level) {
                         settingLevel.push(key)
                     }
                 })
-                if(this.getLength(settingLevel)) {
-                    console.log(settingLevel)
+                if (this.getLength(settingLevel)) {
                     this.foreach(settingLevel, (type, i) => {
                         const originMethods = console[type]
-                        console[type] = function() {
-                            console.debug(arguments)
+                        const serialize = this.serialize.bind(this);
+                        window.console[type] = function () {
                             try {
                                 var params = {
                                     type: "console",
-
+                                    timeStamp: Date.now(),
+                                    level: type,
+                                    getmessage: serialize(arguments[0]),
+                                    url: window.location && window.location.href,
+                                    title: document.title
                                 }
-                            }catch{}
+                                result.push(params)
+                            } catch (e) {
+                            }
                             originMethods.apply(console, arguments)
                         }
                     })
                 }
             }
-            const consoleMethods = Object.create(consoleProto)
-            const watchMethods = ["log", "debug", "info", "warn", "error"];
-            
-
         }
     }
+    xhrRequestCaught() {
+        
+    }
+
 }
 
 export default ErrorCaught

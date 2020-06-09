@@ -2,6 +2,9 @@ interface Document {
   attachEvent(arg0: string, arg1: () => void);
 }
 
+interface Window {
+  result: Array<any>
+}
 interface ICaughtmsg {
   colSource: boolean;
   colIframe: boolean;
