@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <a id="app">请求</a>
+    <script>
+        var app = document.getElementById('app')
+        app.onclick = function () {
+            // oldhttp()
+            newhttp()
+        }
+        // oldhttp
+        function oldhttp() {
+            var xml = new XMLHttpRequest()
+            xml.open('get', "http:localhost:3001/api/test")
+            xml.send()
+            xml.onreadystatechange = function () {
+                if (xml.readyState === 4) {
+                    if (xml.status === 200) {
+                        console.log(xml)
+                        console.log('请求成功')
+                    } else {
+                        console.log(xml.status)
+                        console.log('error')
+                        console.log(xml)
+                    }
+                }
+            }
+        }
+        // newhttp
+        function newhttp() {
+            var xml = new XMLHttpRequest()
+            xml.open('get', "http://localhost:3001/api/test?dd=12")
+            xml.send()
+            xml.onreadystatechange = function () {
+                // 返回相应头内容
+                console.log(xml.getAllResponseHeaders())
+                if (xml.readyState === 4) {
+                    
+                    if (xml.status === 200) {
+                        console.debugger(xml)
+                        console.debugger('请求成功')
+                    } else {
+                        console.debugger(xml.status)
+                        console.debugger('error')
+                        console.debugger(xml)
+                    }
+                }
+            }
+            xml.onload = function () {
+                console.debugger(this.status, this.readyState)
+            }
+            xml.onerror = function (e) {
+                console.debugger(e)
+                console.debugger('newe')
+            }
+        }
+    </script>
+</body>
+
+</html>

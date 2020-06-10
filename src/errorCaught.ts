@@ -1,4 +1,7 @@
 import Utils from './utils'
+import networkCaught from './networkCaught'
+import Equeue from './equeue'
+
 enum consoleLever {
     debug,
     log,
@@ -15,6 +18,7 @@ class ErrorCaught extends Utils {
     colSource: boolean;
     colIframe: boolean;
     consoleLevel: string;
+    caughtQueues: Array<Record<string | number, any>>
     /**
      * 创建实例
      * @param {ICaughtmsg} options
@@ -26,6 +30,8 @@ class ErrorCaught extends Utils {
         this.colSource = colSource;
         this.colIframe = colIframe;
         this.consoleLevel = consoleLevel;
+        this.caughtQueues = []
+        this._initErrorQueue() 
         this._init()
     }
     /**
@@ -43,6 +49,17 @@ class ErrorCaught extends Utils {
         this.syncErrorCaught()
         this.promiseErrorCaught()
         this.consoleWatch()
+        // 网络请求异常监控
+        new networkCaught({ queues: this.caughtQueues })
+    }
+    /**
+     * @description 初始化行为采集
+     * @private
+     * @memberof ErrorCaught
+     */
+    private _initErrorQueue() {
+        const errorq = new Equeue();
+        this.caughtQueues = errorq.queueStacks;
     }
     /**
      * 资源请求出错，400，500类型错误
@@ -54,7 +71,6 @@ class ErrorCaught extends Utils {
     resourceErrorCaught(): void {
         if (window.addEventListener) {
             window.addEventListener('error', (event) => {
-                console.log('-------', event)
                 var node: EventTarget = event.target ? event.target : event.srcElement;
                 var outerHTML = (node as Element).outerHTML;
                 // 图片资源，js脚本，css资源
@@ -74,7 +90,7 @@ class ErrorCaught extends Utils {
                             // statusText ?
                         }
                     }
-                    console.log("resourceErrorCaught", e)
+                    this.caughtQueues.push(e)
                 }
 
                 return true
@@ -100,7 +116,7 @@ class ErrorCaught extends Utils {
     syncErrorCaught(): void {
         window.onerror = function (msg: string | Event, url: string, row: number, col: number, error: Error) {
             // 跨域脚本，且后台没有设置跨域，将异常往上抛出，交给其他输出处理
-            console.log(msg, error)
+            // console.log(msg, error)
             if (msg === "Script error.") return false
             var result: IUncaughtMsg = {
                 message: error && error.message,
@@ -111,7 +127,7 @@ class ErrorCaught extends Utils {
                 stacktrace: error && error.stack,
                 type: "uncaught"
             };
-            console.log("syncErrorCaught", result)
+            this.caughtQueues.push(result)
             return true
         }
     }
@@ -129,7 +145,7 @@ class ErrorCaught extends Utils {
                     message: reason.message,
                     stacktrace: reason.stack
                 }
-                console.log("promiseError======", result)
+                this.caughtQueues.push(result)
                 event.preventDefault() // 阻止冒泡放在末尾，否则无法拿到堆栈信息
             }, true)
         }
@@ -145,7 +161,6 @@ class ErrorCaught extends Utils {
      * @memberof ErrorCaught
      */
     consoleWatch() {
-        const result = []
         if (window.console) {
             let setlevel: string | number;
             let level: number;
@@ -171,10 +186,10 @@ class ErrorCaught extends Utils {
                                     url: window.location && window.location.href,
                                     title: document.title
                                 }
-                                result.push(params)
+                                this.caughtQueues.push(params)
                             } catch (e) {
                             }
-                            originMethods.apply(console, arguments)
+                            return originMethods.apply(console, arguments)
                         }
                     })
                 }
@@ -182,7 +197,7 @@ class ErrorCaught extends Utils {
         }
     }
     xhrRequestCaught() {
-        
+
     }
 
 }

@@ -1,8 +1,0 @@
-class RequestCaught {
-    constructor() {
-
-    }
-    xmlRewrite() {
-        
-    }
-}

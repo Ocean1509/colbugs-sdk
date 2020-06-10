@@ -39,6 +39,7 @@ class Colbugs {
 
     constructor() {
         this.init({})
+        
         this.domReady()
     }
     /**
