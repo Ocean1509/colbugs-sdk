@@ -9,13 +9,13 @@ interface INetwork {
     type?: string
 } 
 interface IOptions {
-    queue: Array<Record<string | number, any>>
+    queues: Array<Record<string | number, any>>
 }
 class NetworkCaught{
     caughtQueues: Array<Record<string | number, any>>
     networkCol: INetwork
     constructor(options: IOptions) {
-        this.caughtQueues = options.queue
+        this.caughtQueues = options.queues
         if(window.XMLHttpRequest) {
             this.wrapXmlhttprequest()
         }
