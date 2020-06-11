@@ -1,6 +1,6 @@
-import Utils from './utils'
 import networkCaught from './networkCaught'
 import Equeue from './equeue'
+import BugsUtils from './utils'
 
 enum consoleLever {
     debug,
@@ -14,24 +14,26 @@ enum consoleLever {
  * @class ErrorCaught
  * @extends {Utils}
  */
-class ErrorCaught extends Utils {
+class ErrorCaught {
     colSource: boolean;
     colIframe: boolean;
     consoleLevel: string;
     caughtQueues: Array<Record<string | number, any>>
+    // 工具类
+    utils: BugsUtils.IUtils
     /**
      * 创建实例
      * @param {ICaughtmsg} options
      * @memberof ErrorCaught
      */
     constructor(options: ICaughtmsg) {
-        super()
         const { colSource, colIframe, consoleLevel } = options;
         this.colSource = colSource;
         this.colIframe = colIframe;
         this.consoleLevel = consoleLevel;
         this.caughtQueues = []
-        this._initErrorQueue() 
+        this._initErrorQueue()
+        this._initUtils()
         this._init()
     }
     /**
@@ -60,6 +62,14 @@ class ErrorCaught extends Utils {
     private _initErrorQueue() {
         const errorq = new Equeue();
         this.caughtQueues = errorq.queueStacks;
+    }
+    /**
+     * @description 初始化工具类
+     * @private
+     * @memberof ErrorCaught
+     */
+    private _initUtils() {
+        this.utils = new BugsUtils.Utils()
     }
     /**
      * 资源请求出错，400，500类型错误
@@ -138,7 +148,7 @@ class ErrorCaught extends Utils {
     promiseErrorCaught(): void {
         if (window.addEventListener) {
             window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-                const reason = this.tryGet(event, 'reason') || {}
+                const reason = this.utils.tryGet(event, 'reason') || {}
                 var result: IPromiseErrorMsg = {
                     type: event.type || "unhandledrejection",
                     name: event.type || "unhandledrejection",
@@ -165,17 +175,17 @@ class ErrorCaught extends Utils {
             let setlevel: string | number;
             let level: number;
             let settingLevel: Array<string | number> = []
-            if (setlevel = this.tryGet(consoleLever, this.consoleLevel)) {
-                level = this.isNumber(setlevel) ? <number>setlevel : Infinity;
-                this.foreach(consoleLever, (val, key) => {
-                    if (this.isNumber(val) && val >= level) {
+            if (setlevel = this.utils.tryGet(consoleLever, this.consoleLevel)) {
+                level = this.utils.isNumber(setlevel) ? <number>setlevel : Infinity;
+                this.utils.foreach(consoleLever, (val, key) => {
+                    if (this.utils.isNumber(val) && val >= level) {
                         settingLevel.push(key)
                     }
                 })
-                if (this.getLength(settingLevel)) {
-                    this.foreach(settingLevel, (type, i) => {
+                if (this.utils.getLength(settingLevel)) {
+                    this.utils.foreach(settingLevel, (type, i) => {
                         const originMethods = console[type]
-                        const serialize = this.serialize.bind(this);
+                        const serialize = this.utils.serialize.bind(this);
                         window.console[type] = function () {
                             try {
                                 var params = {
