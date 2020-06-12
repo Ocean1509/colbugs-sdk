@@ -4,7 +4,9 @@
  */
 class Equeue {
     queueStacks: Array<any>;
-    constructor() {}
+    constructor() {
+        this.queueStacks = []
+    }
     push(content: Record<string | number , any>) {
         this.queueStacks.push(content)
     }

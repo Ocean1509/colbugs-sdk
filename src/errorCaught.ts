@@ -61,6 +61,7 @@ class ErrorCaught {
      */
     private _initErrorQueue() {
         const errorq = new Equeue();
+        window.errorq = errorq
         this.caughtQueues = errorq.queueStacks;
     }
     /**
@@ -124,9 +125,8 @@ class ErrorCaught {
      * @memberof ErrorCaught
      */
     syncErrorCaught(): void {
-        window.onerror = function (msg: string | Event, url: string, row: number, col: number, error: Error) {
+        window.onerror = (msg: string | Event, url: string, row: number, col: number, error: Error) => {
             // 跨域脚本，且后台没有设置跨域，将异常往上抛出，交给其他输出处理
-            // console.log(msg, error)
             if (msg === "Script error.") return false
             var result: IUncaughtMsg = {
                 message: error && error.message,

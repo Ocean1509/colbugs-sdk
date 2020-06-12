@@ -7,6 +7,7 @@ interface INetwork {
     status?: string | number
     statusText?: string
     type?: string
+    fetchType?: string
     responseText?: string
     withCredentials?: boolean
     timeout?: number
@@ -17,12 +18,20 @@ interface IOptions {
 class NetworkCaught {
     caughtQueues: Array<Record<string | number, any>>
     networkCol: INetwork
+    fetchworkCol: INetwork
     constructor(options: IOptions) {
         this.caughtQueues = options.queues
         if (window.XMLHttpRequest) {
             this.wrapXmlhttprequest()
         }
+        if (window.fetch) {
+            this.wrapFetch()
+        }
     }
+    /**
+     * @description caught xmlhttprequest
+     * @memberof NetworkCaught
+     */
     wrapXmlhttprequest() {
         let that = this
         const Xml = window.XMLHttpRequest;
@@ -74,13 +83,53 @@ class NetworkCaught {
                         that.caughtQueues.push(self.networkCol)
                     }
                 })
-                self.addEventListener('timeout', function() {
+                self.addEventListener('timeout', function () {
                     if (self.networkCol && Object.keys(self.networkCol).length) {
                         self.networkCol.statusText = "timeout error"
                         self.networkCol.status = self.status;
                         that.caughtQueues.push(self.networkCol)
                     }
                 })
+            }
+        }
+    }
+    /**
+     * @description caught fetch
+     * @memberof NetworkCaught
+     */
+    wrapFetch() {
+        const oldFetch = window.fetch;
+        let that = this
+        window.fetch = function(input: RequestInfo, init?: RequestInit): any  {
+            that.fetchworkCol = {
+                method: init && init.method ? init.method : 'get',
+                url: <string>input,
+                type: 'fetch',
+                startSend: (new Date).getTime()
+            }
+            if(init && init.body) that.fetchworkCol.body = init.body;
+            try {
+                return oldFetch.apply(this, arguments).then(function(res: Response) {
+                    // 请求成功
+                    if(res.ok) {
+                        that.fetchworkCol = null
+                    } else {
+                        that.fetchworkCol.status = res.status || '';
+                        that.fetchworkCol.statusText = res.statusText || ''
+                        that.fetchworkCol.fetchType = res.type;
+                        that.fetchworkCol.url = res.url;
+                        that.fetchworkCol.endSend = new Date().getTime()
+                    }
+                    return res
+                }, function(error: any) {
+                    that.fetchworkCol.status = 0
+                    that.fetchworkCol.statusText = error.toString()
+                    that.fetchworkCol.endSend = new Date().getTime()
+                    throw error
+                })
+
+            } catch (error) {
+
             }
         }
     }

@@ -3,7 +3,7 @@ interface Document {
 }
 
 interface Window {
-  result: Array<any>
+  errorq: any
 }
 interface ICaughtmsg {
   colSource: boolean;

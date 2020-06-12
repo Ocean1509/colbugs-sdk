@@ -44,8 +44,8 @@ app.get('/api/test', (req, res) => {
     // res.status(403).end()
     // res.status(303).end("dfdsfsd")
     // cancel cors
-    // setTimeout(() => {res.send('1232')}, 1200)
-    res.status(400).send('test1')
+    setTimeout(() => {res.send('1232')}, 1200)
+    // res.status(400).send('test1')
 })
 // 多接口请求
 app.get('/api/test2', (req, res) => {
