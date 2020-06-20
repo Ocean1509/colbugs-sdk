@@ -1,6 +1,7 @@
-import networkCaught from './networkCaught'
+import NetworkCaught from './networkCaught'
 import Equeue from './equeue'
 import BugsUtils from './utils'
+import EventProxy from './Eventproxy'
 
 enum consoleLever {
     debug,
@@ -32,7 +33,9 @@ class ErrorCaught {
         this.colIframe = colIframe;
         this.consoleLevel = consoleLevel;
         this.caughtQueues = []
+        // 初始化错误栈收集
         this._initErrorQueue()
+        // 初始化工具类
         this._initUtils()
         this._init()
     }
@@ -46,13 +49,17 @@ class ErrorCaught {
             this.resourceErrorCaught()
         }
         if (this.colIframe) {
-            this.iframeErrorCaught()
+            // this.iframeErrorCaught()
         }
         this.syncErrorCaught()
         this.promiseErrorCaught()
         this.consoleWatch()
+        // 全局事件代理
+        if(document) {
+            new EventProxy({ queues: this.caughtQueues, utils: this.utils, el: document })
+        }
         // 网络请求异常监控
-        new networkCaught({ queues: this.caughtQueues })
+        new NetworkCaught({ queues: this.caughtQueues })
     }
     /**
      * @description 初始化行为采集
@@ -82,11 +89,11 @@ class ErrorCaught {
     resourceErrorCaught(): void {
         if (window.addEventListener) {
             window.addEventListener('error', (event) => {
-                var node: EventTarget = event.target ? event.target : event.srcElement;
-                var outerHTML = (node as Element).outerHTML;
+                const node: EventTarget = event.target ? event.target : event.srcElement;
+                const outerHTML = (node as Element).outerHTML;
                 // 图片资源，js脚本，css资源
                 if (/img|script|link/.test((node as Element).localName)) {
-                    var e = {
+                    const e = {
                         type: "resourceError",
                         target: {
                             outerHTML: outerHTML,
@@ -128,7 +135,7 @@ class ErrorCaught {
         window.onerror = (msg: string | Event, url: string, row: number, col: number, error: Error) => {
             // 跨域脚本，且后台没有设置跨域，将异常往上抛出，交给其他输出处理
             if (msg === "Script error.") return false
-            var result: IUncaughtMsg = {
+            const result: IUncaughtMsg = {
                 message: error && error.message,
                 row: row,
                 col: col,
@@ -149,7 +156,7 @@ class ErrorCaught {
         if (window.addEventListener) {
             window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
                 const reason = this.utils.tryGet(event, 'reason') || {}
-                var result: IPromiseErrorMsg = {
+                const result: IPromiseErrorMsg = {
                     type: event.type || "unhandledrejection",
                     name: event.type || "unhandledrejection",
                     message: reason.message,
@@ -164,17 +171,16 @@ class ErrorCaught {
      * iframe错误捕获 - 跨域无法获取错误
      * @memberof ErrorCaught
      */
-    iframeErrorCaught(): void {
-    }
+    // iframeErrorCaught(): void {}
     /**
      * @description 重写浏览器console
      * @memberof ErrorCaught
      */
-    consoleWatch() {
+    consoleWatch(): void {
         if (window.console) {
             let setlevel: string | number;
             let level: number;
-            let settingLevel: Array<string | number> = []
+            const settingLevel: Array<string | number> = []
             if (setlevel = this.utils.tryGet(consoleLever, this.consoleLevel)) {
                 level = this.utils.isNumber(setlevel) ? <number>setlevel : Infinity;
                 this.utils.foreach(consoleLever, (val, key) => {
@@ -183,12 +189,12 @@ class ErrorCaught {
                     }
                 })
                 if (this.utils.getLength(settingLevel)) {
-                    this.utils.foreach(settingLevel, (type, i) => {
+                    this.utils.foreach(settingLevel, (type) => {
                         const originMethods = console[type]
                         const serialize = this.utils.serialize.bind(this);
                         window.console[type] = function () {
                             try {
-                                var params = {
+                                const params = {
                                     type: "console",
                                     timeStamp: Date.now(),
                                     level: type,
@@ -206,10 +212,6 @@ class ErrorCaught {
             }
         }
     }
-    xhrRequestCaught() {
-
-    }
-
 }
 
 export default ErrorCaught

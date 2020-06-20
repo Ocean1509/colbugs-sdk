@@ -20,6 +20,7 @@ namespace BugsUtils {
     elementToString(obj: HTMLElement): string
     serialize(val: any): string
     getLength: (obj: any) => (string | number)
+    bind<T extends Function, O extends Object>(g: T, type: O): () => () => any
   }
   /**
  * @description
@@ -92,7 +93,7 @@ namespace BugsUtils {
       if (!this.isObject(obj)) {
         return false;
       }
-      var value = Object.prototype.toString.call(obj);
+      const value = Object.prototype.toString.call(obj);
       return value === "[object Error]" || value === "[object DOMException]" || this.isString(obj.name) && this.isString(obj.message);
     }
     /**
@@ -117,7 +118,7 @@ namespace BugsUtils {
      * @memberof Utils
      */
     isArrayLike(collection: any): boolean {
-      var length = this.getLength(collection);
+      const length = this.getLength(collection);
       return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
     }
     /**
@@ -139,7 +140,7 @@ namespace BugsUtils {
      */
     foreach(target: any, callback: (val, key: string | number) => any): void {
       if (this.isArrayLike(target)) {
-        var length = target.length;
+        const length = target.length;
         for (let i = 0; i < length; i++) {
           callback(target[i], i);
         }
@@ -199,6 +200,20 @@ namespace BugsUtils {
         s = `无法序列化的console: ${error}`
       }
       return s
+    }
+    /**
+     * @description bind
+     * @template T
+     * @template O
+     * @param {T} g
+     * @param {O} type
+     * @returns {() => () => any}
+     * @memberof Utils
+     */
+    bind<T extends Function, O extends Object>(g: T, type: O): () => () => any {
+      return function () {
+        return g.apply(type, Array.prototype.slice.call(arguments));
+      };
     }
   }
 }

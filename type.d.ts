@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface Document {
   attachEvent(arg0: string, arg1: () => void);
 }
 
+interface HTMLElement {
+  attachEvent(arg0: string, arg1: () => void);
+}
 interface Window {
   errorq: any
 }

@@ -70,4 +70,4 @@ xpath 要为整个网站做代理
 支持单页面 ？ hash history
 
 
-网页ajax请求基本基于  xmlhttprequest 和  fetch，需要重写两者的方法
+网页ajax请求基本基于  xmlhttprequest 和  fetch，需要重写两者的方法 complete

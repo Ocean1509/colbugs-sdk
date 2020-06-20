@@ -3,11 +3,11 @@
  * @class equeue
  */
 class Equeue {
-    queueStacks: Array<any>;
+    queueStacks: Array<unknown>;
     constructor() {
         this.queueStacks = []
     }
-    push(content: Record<string | number , any>) {
+    push(content: Record<string | number , unknown>): void {
         this.queueStacks.push(content)
     }
 }

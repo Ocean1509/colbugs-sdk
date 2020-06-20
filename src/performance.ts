@@ -16,7 +16,7 @@ class Performance {
         }
         this._performance()
     }
-    _performance() {
+    _performance(): void {
         // 脚本最终会放在head，dom解析的过程，除了开始解析阶段，其他阶段的时间都无法准确获取。
         if (!("performance" in window)) return
         const perTime = window.performance.timing;
