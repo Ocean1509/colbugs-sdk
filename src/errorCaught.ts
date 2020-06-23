@@ -1,7 +1,7 @@
 import NetworkCaught from './networkCaught'
-import Equeue from './equeue'
 import BugsUtils from './utils'
 import EventProxy from './Eventproxy'
+import SendMsg from './sendMessage'
 
 enum consoleLever {
     debug,
@@ -15,11 +15,11 @@ enum consoleLever {
  * @class ErrorCaught
  * @extends {Utils}
  */
-class ErrorCaught {
+class ErrorCaught extends SendMsg {
     colSource: boolean;
     colIframe: boolean;
+    colnums: number;
     consoleLevel: string;
-    caughtQueues: Array<Record<string | number, any>>
     // 工具类
     utils: BugsUtils.IUtils
     /**
@@ -28,13 +28,11 @@ class ErrorCaught {
      * @memberof ErrorCaught
      */
     constructor(options: ICaughtmsg) {
+        super()
         const { colSource, colIframe, consoleLevel } = options;
         this.colSource = colSource;
         this.colIframe = colIframe;
         this.consoleLevel = consoleLevel;
-        this.caughtQueues = []
-        // 初始化错误栈收集
-        this._initErrorQueue()
         // 初始化工具类
         this._initUtils()
         this._init()
@@ -56,20 +54,10 @@ class ErrorCaught {
         this.consoleWatch()
         // 全局事件代理
         if(document) {
-            new EventProxy({ queues: this.caughtQueues, utils: this.utils, el: document })
+            new EventProxy({ utils: this.utils, el: document })
         }
         // 网络请求异常监控
-        new NetworkCaught({ queues: this.caughtQueues })
-    }
-    /**
-     * @description 初始化行为采集
-     * @private
-     * @memberof ErrorCaught
-     */
-    private _initErrorQueue() {
-        const errorq = new Equeue();
-        window.errorq = errorq
-        this.caughtQueues = errorq.queueStacks;
+        new NetworkCaught()
     }
     /**
      * @description 初始化工具类
@@ -108,7 +96,7 @@ class ErrorCaught {
                             // statusText ?
                         }
                     }
-                    this.caughtQueues.push(e)
+                    this.sendMsg(e)
                 }
 
                 return true
@@ -144,7 +132,8 @@ class ErrorCaught {
                 stacktrace: error && error.stack,
                 type: "uncaught"
             };
-            this.caughtQueues.push(result)
+            this.sendMsg(result)
+            // this.caughtQueues.push(result)
             return true
         }
     }
@@ -162,7 +151,8 @@ class ErrorCaught {
                     message: reason.message,
                     stacktrace: reason.stack
                 }
-                this.caughtQueues.push(result)
+                this.sendMsg(result)
+                // this.caughtQueues.push(result)
                 event.preventDefault() // 阻止冒泡放在末尾，否则无法拿到堆栈信息
             }, true)
         }
@@ -194,7 +184,7 @@ class ErrorCaught {
                         const serialize = this.utils.serialize.bind(this);
                         window.console[type] = function () {
                             try {
-                                const params = {
+                                const params: IConsoleParams = {
                                     type: "console",
                                     timeStamp: Date.now(),
                                     level: type,
@@ -202,7 +192,8 @@ class ErrorCaught {
                                     url: window.location && window.location.href,
                                     title: document.title
                                 }
-                                this.caughtQueues.push(params)
+                                this.pushEqueue(params)
+                                // this.caughtQueues.push(params)
                             } catch (e) {
                             }
                             return originMethods.apply(console, arguments)
@@ -210,6 +201,17 @@ class ErrorCaught {
                     })
                 }
             }
+        }
+    }
+    /**
+     * @description
+     * @private
+     * @param {IEventParams} content
+     * @memberof EventProxy
+     */
+    private pushEqueue(content: IConsoleParams): void {
+        if(window && window.colbugs && window.colbugs.colQueues){
+            window.colbugs.colQueues.push(content)
         }
     }
 }

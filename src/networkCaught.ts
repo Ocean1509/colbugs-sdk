@@ -1,26 +1,10 @@
-interface INetwork {
-    method: string
-    url: string
-    body?: Document | BodyInit | null
-    startSend?: number
-    endSend?: number
-    status?: string | number
-    statusText?: string
-    type?: string
-    fetchType?: string
-    responseText?: string
-    withCredentials?: boolean
-    timeout?: number
-}
-interface IOptions {
-    queues: Array<Record<string | number, any>>
-}
-class NetworkCaught {
-    caughtQueues: Array<Record<string | number, any>>
+import SendMsg from './sendMessage'
+
+class NetworkCaught extends SendMsg{
     networkCol: INetwork
     fetchworkCol: INetwork
-    constructor(options: IOptions) {
-        this.caughtQueues = options.queues
+    constructor() {
+        super()
         if (window.XMLHttpRequest) {
             this.wrapXmlhttprequest()
         }
@@ -32,8 +16,8 @@ class NetworkCaught {
      * @description caught xmlhttprequest
      * @memberof NetworkCaught
      */
-    wrapXmlhttprequest() {
-        let that = this
+    wrapXmlhttprequest(): void {
+        const that = this
         const Xml = window.XMLHttpRequest;
         const origin_open = Xml.prototype.open;
         const origin_send = Xml.prototype.send;
@@ -73,21 +57,25 @@ class NetworkCaught {
                     if (self.networkCol && Object.keys(self.networkCol).length) {
                         self.networkCol.withCredentials = self.withCredentials
                         self.networkCol.timeout = self.timeout
-                        that.caughtQueues.push(self.networkCol)
+                        that.sendMsg(self.networkCol)
+                        // that.caughtQueues.push(self.networkCol)
                     }
                 }, true)
                 self.addEventListener('error', function (e: ProgressEvent) {
                     if (self.networkCol && Object.keys(self.networkCol).length) {
                         self.networkCol.statusText = e.type
                         self.networkCol.status = self.status;
-                        that.caughtQueues.push(self.networkCol)
+                        that.sendMsg(self.networkCol)
+
+                        // that.caughtQueues.push(self.networkCol)
                     }
                 })
                 self.addEventListener('timeout', function () {
                     if (self.networkCol && Object.keys(self.networkCol).length) {
                         self.networkCol.statusText = "timeout error"
                         self.networkCol.status = self.status;
-                        that.caughtQueues.push(self.networkCol)
+                        that.sendMsg(self.networkCol)
+                        // that.caughtQueues.push(self.networkCol)
                     }
                 })
             }
@@ -97,9 +85,9 @@ class NetworkCaught {
      * @description caught fetch
      * @memberof NetworkCaught
      */
-    wrapFetch() {
+    wrapFetch(): void {
         const oldFetch = window.fetch;
-        let that = this
+        const that = this
         window.fetch = function(input: RequestInfo, init?: RequestInit): any  {
             that.fetchworkCol = {
                 method: init && init.method ? init.method : 'get',
@@ -119,12 +107,14 @@ class NetworkCaught {
                         that.fetchworkCol.fetchType = res.type;
                         that.fetchworkCol.url = res.url;
                         that.fetchworkCol.endSend = new Date().getTime()
+                        that.sendMsg(that.fetchworkCol)
                     }
                     return res
                 }, function(error: any) {
                     that.fetchworkCol.status = 0
                     that.fetchworkCol.statusText = error.toString()
                     that.fetchworkCol.endSend = new Date().getTime()
+                    that.sendMsg(that.fetchworkCol)
                     throw error
                 })
 

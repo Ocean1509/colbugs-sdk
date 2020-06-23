@@ -1,9 +1,8 @@
-import Performance from './performance'
-import { ISendMsg } from './index'
 import ErrorCaught from './errorCaught'
-
+import SendMsg from './sendMessage'
+import { createEqueue } from './equeue'
 interface IinitOptions {
-    callback?: () => {},
+    callback?: () => Record<string, unknown>,
     apiKey?: string
     colDev?: boolean;
     colSource?: boolean;
@@ -11,13 +10,13 @@ interface IinitOptions {
     colBehavior?: boolean;
     colIframe?: boolean;
     consoleLevel?: string;
+    colnums?: number;
 }
 
-class Colbugs {
+export default class Colbugs extends SendMsg implements IColbugs {
 
-    sendMsg: ISendMsg;
     // callback: 自定义回调处理，不使用上传，使用用户自定义回调
-    callback: (rest: any) => void;
+    callback: (rest: unknown) => void;
 
     apiKey: string;
     // colDev: 开发环境下是否收集日志
@@ -35,19 +34,36 @@ class Colbugs {
     // 网站url
     url: string;
     // console日志级别
-    consoleLevel: string
+    consoleLevel: string;
+    // 错误栈收集数目
+    colnums: number;
+    // 错误栈队列
+    colQueues: IEqueueClass;
+    // colbugs 版本号
+    static version = "1.0.0"
+    // 采集服务url
+    // img
+    errorUrl: string = "http://localhost:3002/fault.gif"
+    // https
+    errorSslUrl: string = "https://"
+    // http
+    errorNoSslUrl: string = "http://localhost:3002/capture"
+
+
 
     constructor() {
+        super()
         this.init({})
-        
-        this.domReady()
+        // 初始化错误栈队列
+        this.initqueue()
     }
     /**
-     * 初始化参数配置
-     * @param param0 
+     * @description 初始化参数配置
+     * @param {IinitOptions} options
+     * @memberof Colbugs
      */
-    init(options: IinitOptions) {
-        const { callback = null, apiKey = "wyp", colDev = false, colSource = true, colPerformance = true, colBehavior = true, colIframe = true, consoleLevel = "log" } = options
+    init(options: IinitOptions): void {
+        const { callback = null, apiKey = "wyp", colDev = false, colSource = true, colPerformance = true, colBehavior = true, colIframe = true, consoleLevel = "log", colnums = 10 } = options
         this.callback = !callback ? (data) => { console.log(data) } : callback;
         this.apiKey = apiKey;
         this.colDev = colDev;
@@ -56,67 +72,20 @@ class Colbugs {
         this.colBehavior = colBehavior;
         this.colIframe = colIframe
         this.consoleLevel = consoleLevel;
+        this.colnums = colnums;
         // 初始化错误监控
-        const errorCaught = new ErrorCaught({ colSource, colIframe, consoleLevel });
+        new ErrorCaught({ colSource, colIframe, consoleLevel });
         
+    }
+    private initqueue(): void {
+        this.colQueues = createEqueue(this.colnums);
     }
     /**
      * 发送自定义错误
      */
-    sendError(message: string = "test"): void {
-        this._sendError(message)
-    }
-    /**
-     * 内部调用发送错误
-     */
-    private _sendError(message: string) :void{
-        this.getUserMsg();
-        if(message) {
-            this.sendMsg.message = message;
-        }
-        if (this.colPerformance) {
-            const p = new Performance()
-            this.sendMsg.per = p.performances;
-            console.log(this.sendMsg)
-        }
-        this.sendMsg.time = (new Date).getTime();
-        this.sendMsg.title = this.title;
-        this.sendMsg.url = this.url;
-    }
-    /**
-     * 获取网站基本信息，用户设备等
-     * @memberof Colbugs
-     */
-    getUserMsg(): void{
-        if("navigator" in window) {
-            const { language, platform, userAgent } = window.navigator;
-            this.sendMsg.language = language;
-            this.sendMsg.platform = platform;
-            this.sendMsg.userAgent = userAgent;
-        }
-        if("document" in window) {
-            this.sendMsg.title = window.document.title || "";
-        }
-        this.sendMsg.url = window.location && window.location.href; 
-    }
-    /**
-     * 监控domready事件
-     * @memberof domReady
-     */
-    private domReady():void {
-        if(document.addEventListener) {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.url = window.location.href;
-                this.title = document.title;
-            })
-        } else {
-            document.attachEvent('onreadystatechange', () => {
-                this.sendMsg.url = window.location.href;
-                this.sendMsg.title = document.title;
-            })
-        }
+    sendError(message = "test"): void {
+        if(typeof message !== 'string') return;
+        let type = "customize"
+        this.sendMsg(message, type)
     }
 }
-
-
-export default Colbugs

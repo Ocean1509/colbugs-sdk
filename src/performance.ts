@@ -1,5 +1,3 @@
-import { IPerformance } from './index'
-
 class Performance {
     performances: IPerformance;
     constructor() {

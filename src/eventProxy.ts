@@ -5,30 +5,14 @@
 import BugsUtils from './utils'
 
 interface IOptions {
-    queues: Array<Record<string | number, any>>
     utils: BugsUtils.IUtils
     el: Document
 }
 
-interface IEventParams {
-    type: string,
-    url: string,
-    title: string,
-    tagName: string,
-    id: string,
-    className: string,
-    outerHTML: string,
-    timeStamp: number,
-    value?: string,
-    checked?: boolean
-}
-
-class EventProxy {
-    caughtQueues: Array<Record<string | number, any>>
+class EventProxy{
     utils: BugsUtils.IUtils
     el: Document
     constructor(options: IOptions) {
-        this.caughtQueues = options.queues
         this.utils = options.utils
         this.el = options.el;
         this.init()
@@ -127,7 +111,7 @@ class EventProxy {
             params.value = value;
         }
         if (ischecked !== void 0) params.checked = ischecked;
-        this.caughtQueues.push(params)
+        this.pushEqueue(params)
     }
     /**
      * @description
@@ -166,6 +150,17 @@ class EventProxy {
      */
     getElementType(element: Element): string {
         return (element.getAttribute("type") || "").toLowerCase();
+    }
+    /**
+     * @description
+     * @private
+     * @param {IEventParams} content
+     * @memberof EventProxy
+     */
+    private pushEqueue(content: IEventParams): void {
+        if(window && window.colbugs && window.colbugs.colQueues){
+            window.colbugs.colQueues.push(content)
+        }
     }
 }
 
