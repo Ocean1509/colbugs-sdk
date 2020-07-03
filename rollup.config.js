@@ -8,7 +8,7 @@ export default {
   input: 'src/index.ts',
   output: {
     name: 'bundle',
-    file: './dist/bundle.umd.js',
+    file: './dist/colbugs.umd.js',
     format: 'esm',
   },
   plugins: [

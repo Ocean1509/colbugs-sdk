@@ -40,7 +40,7 @@ app.get('/api/test', (req, res) => {
     // 4. 无法跨域
     // 5. 超时
     // 6. 200
-    // res.send(500).end('server error')
+    // res.status(500).end("2j324j3")
     // res.status(403).end()
     // res.status(303).end("dfdsfsd")
     // cancel cors

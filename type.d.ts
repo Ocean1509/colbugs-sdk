@@ -38,6 +38,7 @@ interface IColbugs {
   errorNoSslUrl: string;
   sendError: (s?: string) => void;
   colQueues: IEqueueClass
+  apiKey: string
 }
 
 interface IConsoleParams {
@@ -45,12 +46,10 @@ interface IConsoleParams {
   timeStamp: number;
   level: string;
   getmessage: string,
-  url: string,
-  title: string
 }
 
 interface IEqueueClass {
-  push: (c: Record<string | number, any>) => void
+  pushStack: (c: Record<string | number, any>) => void
   getStacks: () => Array<any>
 }
 
@@ -76,6 +75,7 @@ interface INetwork {
   status?: string | number
   statusText?: string
   type?: string
+  name?: string
   fetchType?: string
   responseText?: string
   withCredentials?: boolean
@@ -92,4 +92,15 @@ interface IPerformance {
   domEndFetchS: number
   redirectCount: number
   type: number;
+}
+
+interface IResourceErrorTarget {
+  outerHTML: string
+  src: string
+  tagName: string
+  id: string
+  className: string
+  name: string
+  type: string
+  timeStamp: number
 }

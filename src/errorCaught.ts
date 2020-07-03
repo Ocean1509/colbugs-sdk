@@ -82,7 +82,9 @@ class ErrorCaught extends SendMsg {
                 // 图片资源，js脚本，css资源
                 if (/img|script|link/.test((node as Element).localName)) {
                     const e = {
-                        type: "resourceError",
+                        type: "ResourceError",
+                        name: "ResourceError",
+                        message: `resourceError: ${node && (node as HTMLImageElement).src}`,
                         target: {
                             outerHTML: outerHTML,
                             src: node && (node as HTMLImageElement).src,
@@ -94,7 +96,7 @@ class ErrorCaught extends SendMsg {
                             timeStamp: event.timeStamp
                             // status: ?
                             // statusText ?
-                        }
+                        } as IResourceErrorTarget
                     }
                     this.sendMsg(e)
                 }
@@ -130,7 +132,7 @@ class ErrorCaught extends SendMsg {
                 // fileName: "",
                 name: error && error.name || "uncaught error",
                 stacktrace: error && error.stack,
-                type: "uncaught"
+                type: "Uncaught"
             };
             this.sendMsg(result)
             // this.caughtQueues.push(result)
@@ -146,9 +148,9 @@ class ErrorCaught extends SendMsg {
             window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
                 const reason = this.utils.tryGet(event, 'reason') || {}
                 const result: IPromiseErrorMsg = {
-                    type: event.type || "unhandledrejection",
+                    type: "Unhandledrejection",
                     name: event.type || "unhandledrejection",
-                    message: reason.message,
+                    message: (typeof reason !== 'string') ? reason.message : reason,
                     stacktrace: reason.stack
                 }
                 this.sendMsg(result)
@@ -168,6 +170,7 @@ class ErrorCaught extends SendMsg {
      */
     consoleWatch(): void {
         if (window.console) {
+            let that = this
             let setlevel: string | number;
             let level: number;
             const settingLevel: Array<string | number> = []
@@ -181,7 +184,8 @@ class ErrorCaught extends SendMsg {
                 if (this.utils.getLength(settingLevel)) {
                     this.utils.foreach(settingLevel, (type) => {
                         const originMethods = console[type]
-                        const serialize = this.utils.serialize.bind(this);
+                        const serialize = this.utils.serialize.bind(this.utils);
+                        // alert(serialize)
                         window.console[type] = function () {
                             try {
                                 const params: IConsoleParams = {
@@ -189,12 +193,11 @@ class ErrorCaught extends SendMsg {
                                     timeStamp: Date.now(),
                                     level: type,
                                     getmessage: serialize(arguments[0]),
-                                    url: window.location && window.location.href,
-                                    title: document.title
                                 }
-                                this.pushEqueue(params)
+                                that.pushEqueue(params)
                                 // this.caughtQueues.push(params)
                             } catch (e) {
+                                alert(e)
                             }
                             return originMethods.apply(console, arguments)
                         }
@@ -211,7 +214,7 @@ class ErrorCaught extends SendMsg {
      */
     private pushEqueue(content: IConsoleParams): void {
         if(window && window.colbugs && window.colbugs.colQueues){
-            window.colbugs.colQueues.push(content)
+            window.colbugs.colQueues.pushStack(content)
         }
     }
 }

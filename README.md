@@ -97,3 +97,10 @@ sendBeacon
 不能跨域，需要服务端设置
 兼容性问题。
 请求方式为post
+
+
+
+vue组建内部错误，都被Vue.config.errorHandler = function() {
+
+}
+捕获

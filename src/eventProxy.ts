@@ -159,7 +159,7 @@ class EventProxy{
      */
     private pushEqueue(content: IEventParams): void {
         if(window && window.colbugs && window.colbugs.colQueues){
-            window.colbugs.colQueues.push(content)
+            window.colbugs.colQueues.pushStack(content)
         }
     }
 }

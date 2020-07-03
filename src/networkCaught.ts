@@ -33,7 +33,8 @@ class NetworkCaught extends SendMsg{
                 this.networkCol.body = body
             }
             this.networkCol.startSend = (new Date).getTime()
-            this.networkCol.type = 'xhr'
+            this.networkCol.type = 'httpError'
+            this.networkCol.name = 'XHL'
             try {
                 listenNetworkProcess(this)
             } catch { }
@@ -46,6 +47,7 @@ class NetworkCaught extends SendMsg{
                         if (self.status >= 200 && self.status < 400) {
                             self.networkCol = null;
                         } else {
+                            // if(self.networkCol.statusText) return
                             self.networkCol.endSend = (new Date).getTime()
                             self.networkCol.status = self.status || '500'
                             self.networkCol.statusText = self.statusText || 'unknown request error'
@@ -58,7 +60,6 @@ class NetworkCaught extends SendMsg{
                         self.networkCol.withCredentials = self.withCredentials
                         self.networkCol.timeout = self.timeout
                         that.sendMsg(self.networkCol)
-                        // that.caughtQueues.push(self.networkCol)
                     }
                 }, true)
                 self.addEventListener('error', function (e: ProgressEvent) {
@@ -66,16 +67,14 @@ class NetworkCaught extends SendMsg{
                         self.networkCol.statusText = e.type
                         self.networkCol.status = self.status;
                         that.sendMsg(self.networkCol)
-
-                        // that.caughtQueues.push(self.networkCol)
                     }
                 })
                 self.addEventListener('timeout', function () {
                     if (self.networkCol && Object.keys(self.networkCol).length) {
                         self.networkCol.statusText = "timeout error"
                         self.networkCol.status = self.status;
+                        self.networkCol.timeout = self.timeout
                         that.sendMsg(self.networkCol)
-                        // that.caughtQueues.push(self.networkCol)
                     }
                 })
             }
@@ -92,7 +91,8 @@ class NetworkCaught extends SendMsg{
             that.fetchworkCol = {
                 method: init && init.method ? init.method : 'get',
                 url: <string>input,
-                type: 'fetch',
+                name: 'Fetch',
+                type: 'httpError',
                 startSend: (new Date).getTime()
             }
             if(init && init.body) that.fetchworkCol.body = init.body;

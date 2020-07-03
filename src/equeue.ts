@@ -5,7 +5,7 @@ export function createEqueue(limit: number): IEqueueClass {
      * 记录堆栈
      * @param content 
      */
-    const push = (content: Record<string | number, any>): void => {
+    const pushStack = (content: Record<string | number, any>): void => {
         if (_length() >= limitNums) {
             queueStacks.pop()
         }
@@ -32,7 +32,7 @@ export function createEqueue(limit: number): IEqueueClass {
         return queueStacks.length || 0
     }
     return {
-        push,
+        pushStack,
         getStacks,
     }
 }

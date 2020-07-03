@@ -53,9 +53,6 @@ export default class Colbugs extends SendMsg implements IColbugs {
 
     constructor() {
         super()
-        this.init({})
-        // 初始化错误栈队列
-        this.initqueue()
     }
     /**
      * @description 初始化参数配置
@@ -75,7 +72,8 @@ export default class Colbugs extends SendMsg implements IColbugs {
         this.colnums = colnums;
         // 初始化错误监控
         new ErrorCaught({ colSource, colIframe, consoleLevel });
-        
+        // 初始化错误栈队列
+        this.initqueue()
     }
     private initqueue(): void {
         this.colQueues = createEqueue(this.colnums);
@@ -85,7 +83,7 @@ export default class Colbugs extends SendMsg implements IColbugs {
      */
     sendError(message = "test"): void {
         if(typeof message !== 'string') return;
-        let type = "customize"
+        let type = "Customize"
         this.sendMsg(message, type)
     }
 }
