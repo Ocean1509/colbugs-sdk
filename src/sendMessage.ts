@@ -1,4 +1,6 @@
 import getPerformance from './performance'
+import BugsUtils from './utils'
+
 interface IMsg {
     title?: string
     url?: string
@@ -30,6 +32,7 @@ interface ISendMsg {
 }
 class SendMsg implements ISendMsg {
     msg: IMsg
+    utils: BugsUtils.IUtils
     constructor() {
         this.resetMsg()
     }
@@ -53,7 +56,7 @@ class SendMsg implements ISendMsg {
     }
     private send<T extends IMsg>(msg: (string | T), type: string): void {
         if (window && window.colbugs) {
-            let imgUrl = window.colbugs && window.colbugs.errorUrl
+            // let imgUrl = window.colbugs && window.colbugs.errorUrl
             let errorurl = this.isHttpsProtocol() ? window.colbugs.errorSslUrl : window.colbugs.errorNoSslUrl;
             // 用户行为
             this.getErrorQueue()
@@ -88,8 +91,21 @@ class SendMsg implements ISendMsg {
             // 测试发送
             // TODO to buffer
             // let blobs = new Blob([JSON.stringify(msg)], {type : 'application/json'});
-            console.log(this.msg)
-            navigator.sendBeacon('http://192.168.0.110:8083/report', JSON.stringify(this.msg))
+            // const bodyBuffer = this.utils.stringToUint(JSON.stringify(msg));
+            // const xhr = new XMLHttpRequest();
+            // xhr.sendByError = true;
+            // xhr.open("POST", errorurl)
+            // xhr.setRequestHeader("Content-Type", "application/octet-stream")
+            // xhr.send(bodyBuffer)
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(errorurl, JSON.stringify(this.msg))
+            } else {
+                const xhr = new XMLHttpRequest();
+                xhr.sendByError = true;
+                xhr.open("POST", errorurl)
+                xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8")
+                xhr.send(JSON.stringify(this.msg))
+            }
             // reset
             this.resetMsg()
         }

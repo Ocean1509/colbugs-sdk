@@ -47,7 +47,7 @@ export default class Colbugs extends SendMsg implements IColbugs {
     // https
     errorSslUrl: string = "https://"
     // http
-    errorNoSslUrl: string = "http://localhost:3002/capture"
+    errorNoSslUrl: string = "http://192.168.0.110:8083/report"
 
 
 

@@ -1,6 +1,6 @@
 import SendMsg from './sendMessage'
 
-class NetworkCaught extends SendMsg{
+class NetworkCaught extends SendMsg {
     networkCol: INetwork
     fetchworkCol: INetwork
     constructor() {
@@ -29,15 +29,19 @@ class NetworkCaught extends SendMsg{
             return origin_open.apply(this, arguments)
         }
         Xml.prototype.send = function (body?: Document | BodyInit | null) {
-            if (body !== void 0) {
-                this.networkCol.body = body
-            }
-            this.networkCol.startSend = (new Date).getTime()
-            this.networkCol.type = 'httpError'
-            this.networkCol.name = 'XHL'
+            console.log(this.sendByError)
             try {
-                listenNetworkProcess(this)
-            } catch { }
+                if (!this.sendByError) {
+                    if (body !== void 0) {
+                        this.networkCol.body = body
+                    }
+                    this.networkCol.startSend = (new Date).getTime()
+                    this.networkCol.type = 'httpError'
+                    this.networkCol.name = 'XHL'
+                    listenNetworkProcess(this)
+                }
+            } catch (error) {
+            }
             return origin_send.apply(this, arguments)
         }
         function listenNetworkProcess(self) {
@@ -87,7 +91,7 @@ class NetworkCaught extends SendMsg{
     wrapFetch(): void {
         const oldFetch = window.fetch;
         const that = this
-        window.fetch = function(input: RequestInfo, init?: RequestInit): any  {
+        window.fetch = function (input: RequestInfo, init?: RequestInit): any {
             that.fetchworkCol = {
                 method: init && init.method ? init.method : 'get',
                 url: <string>input,
@@ -95,11 +99,11 @@ class NetworkCaught extends SendMsg{
                 type: 'httpError',
                 startSend: (new Date).getTime()
             }
-            if(init && init.body) that.fetchworkCol.body = init.body;
+            if (init && init.body) that.fetchworkCol.body = init.body;
             try {
-                return oldFetch.apply(this, arguments).then(function(res: Response) {
+                return oldFetch.apply(this, arguments).then(function (res: Response) {
                     // 请求成功
-                    if(res.ok) {
+                    if (res.ok) {
                         that.fetchworkCol = null
                     } else {
                         that.fetchworkCol.status = res.status || '';
@@ -110,7 +114,7 @@ class NetworkCaught extends SendMsg{
                         that.sendMsg(that.fetchworkCol)
                     }
                     return res
-                }, function(error: any) {
+                }, function (error: any) {
                     that.fetchworkCol.status = 0
                     that.fetchworkCol.statusText = error.toString()
                     that.fetchworkCol.endSend = new Date().getTime()

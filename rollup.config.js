@@ -18,6 +18,8 @@ export default {
     getBabelOutputPlugin({
       presets: [['@babel/env', { modules: 'umd' }]]
     }),
-    uglify()
+    uglify({mangle:{
+      toplevel: true
+      }})
   ]
 };

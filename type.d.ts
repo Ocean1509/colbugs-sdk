@@ -94,6 +94,9 @@ interface IPerformance {
   type: number;
 }
 
+interface XMLHttpRequest {
+  sendByError: boolean
+}
 interface IResourceErrorTarget {
   outerHTML: string
   src: string

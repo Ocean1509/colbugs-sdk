@@ -21,6 +21,7 @@ namespace BugsUtils {
     serialize(val: any): string
     getLength: (obj: any) => (string | number)
     bind<T extends Function, O extends Object>(g: T, type: O): () => () => any
+    stringToUint(s: string): Uint8Array
   }
   /**
  * @description
@@ -215,6 +216,22 @@ namespace BugsUtils {
         return g.apply(type, Array.prototype.slice.call(arguments));
       };
     }
+    /**
+     * @description string to buffer
+     * @param {string} s
+     * @returns {Uint8Array}
+     * @memberof Utils
+     */
+    stringToUint(s: string): Uint8Array {
+      let string = btoa(unescape(encodeURIComponent(s))),
+        charList = string.split('');
+      const uintArray = [];
+      for (var i = 0; i < charList.length; i++) {
+        uintArray.push(charList[i].charCodeAt(0));
+      }
+      return new Uint8Array(uintArray);
+    }
+
   }
 }
 
