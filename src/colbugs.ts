@@ -11,6 +11,8 @@ interface IinitOptions {
     colIframe?: boolean;
     consoleLevel?: string;
     colnums?: number;
+    errorSslUrl? : string;
+    errorNoSslUrl?: string;
 }
 
 export default class Colbugs extends SendMsg implements IColbugs {
@@ -70,6 +72,12 @@ export default class Colbugs extends SendMsg implements IColbugs {
         this.colIframe = colIframe
         this.consoleLevel = consoleLevel;
         this.colnums = colnums;
+        if(options.errorSslUrl) {
+            this.errorSslUrl = options.errorSslUrl;
+        }
+        if(options.errorSslUrl) {
+            this.errorSslUrl = options.errorSslUrl;
+        }
         // 初始化错误监控
         new ErrorCaught({ colSource, colIframe, consoleLevel });
         // 初始化错误栈队列

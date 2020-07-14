@@ -29,7 +29,6 @@ class NetworkCaught extends SendMsg {
             return origin_open.apply(this, arguments)
         }
         Xml.prototype.send = function (body?: Document | BodyInit | null) {
-            console.log(this.sendByError)
             try {
                 if (!this.sendByError) {
                     if (body !== void 0) {
