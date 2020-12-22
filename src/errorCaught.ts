@@ -18,6 +18,7 @@ enum consoleLever {
 class ErrorCaught extends SendMsg {
     colSource: boolean;
     colIframe: boolean;
+    colNetwork: boolean;
     colnums: number;
     consoleLevel: string;
     // 工具类
@@ -29,9 +30,10 @@ class ErrorCaught extends SendMsg {
      */
     constructor(options: ICaughtmsg) {
         super()
-        const { colSource, colIframe, consoleLevel } = options;
+        const { colSource, colIframe, consoleLevel, colNetwork } = options;
         this.colSource = colSource;
         this.colIframe = colIframe;
+        this.colNetwork = colNetwork;
         this.consoleLevel = consoleLevel;
         // 初始化工具类
         this._initUtils()
@@ -57,7 +59,9 @@ class ErrorCaught extends SendMsg {
             new EventProxy({ utils: this.utils, el: document })
         }
         // 网络请求异常监控
-        new NetworkCaught()
+        if(this.colNetwork) {
+            new NetworkCaught()
+        }
     }
     /**
      * @description 初始化工具类

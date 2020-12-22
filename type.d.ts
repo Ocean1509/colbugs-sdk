@@ -12,6 +12,7 @@ interface Window {
 interface ICaughtmsg {
   colSource: boolean;
   colIframe: boolean;
+  colNetwork: boolean;
   consoleLevel: string;
 }
 

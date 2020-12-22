@@ -9,6 +9,7 @@ interface IinitOptions {
     colPerformance?: boolean;
     colBehavior?: boolean;
     colIframe?: boolean;
+    colNetwork?: boolean;
     consoleLevel?: string;
     colnums?: number;
     errorSslUrl? : string;
@@ -31,6 +32,8 @@ export default class Colbugs extends SendMsg implements IColbugs {
     colBehavior: boolean;
     // colIframe: 是否监控iframe加载错误
     colIframe: boolean;
+    // colNetwork: 是否监控网络异常，默认为true，特殊场景可配置
+    colNetwork: boolean;
     // 网站标题
     title: string;
     // 网站url
@@ -62,7 +65,7 @@ export default class Colbugs extends SendMsg implements IColbugs {
      * @memberof Colbugs
      */
     init(options: IinitOptions): void {
-        const { callback = null, apiKey = "wyp", colDev = false, colSource = true, colPerformance = true, colBehavior = true, colIframe = true, consoleLevel = "log", colnums = 10 } = options
+        const { callback = null, apiKey = "wyp", colDev = false, colSource = true, colPerformance = true, colBehavior = true, colIframe = true, consoleLevel = "log", colnums = 10, colNetwork = true } = options
         this.callback = !callback ? (data) => { console.log(data) } : callback;
         this.apiKey = apiKey;
         this.colDev = colDev;
@@ -70,16 +73,17 @@ export default class Colbugs extends SendMsg implements IColbugs {
         this.colPerformance = colPerformance;
         this.colBehavior = colBehavior;
         this.colIframe = colIframe
+        this.colNetwork = colNetwork
         this.consoleLevel = consoleLevel;
         this.colnums = colnums;
-        if(options.errorSslUrl) {
-            this.errorSslUrl = options.errorSslUrl;
+        if(options.errorNoSslUrl) {
+            this.errorNoSslUrl = options.errorNoSslUrl;
         }
         if(options.errorSslUrl) {
             this.errorSslUrl = options.errorSslUrl;
         }
         // 初始化错误监控
-        new ErrorCaught({ colSource, colIframe, consoleLevel });
+        new ErrorCaught({ colSource, colIframe, consoleLevel, colNetwork });
         // 初始化错误栈队列
         this.initqueue()
     }
